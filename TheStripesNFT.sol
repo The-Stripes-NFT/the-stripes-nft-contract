@@ -11,10 +11,12 @@ contract TheStripesNFT is ERC721Enumerable, Ownable {
     string public baseURI;
     string public baseExtension = ".json";
     uint256 public cost = 0.05 ether;
+    uint256 public presaleCost = 0.03 ether;
     uint256 public maxSupply = 992;
     uint256 public maxMintAmount = 20;
     bool public paused = false;
     mapping(address => bool) public whitelisted;
+    mapping(address => bool) public presaleWallets;
 
     constructor(
         string memory _name,
@@ -40,7 +42,13 @@ contract TheStripesNFT is ERC721Enumerable, Ownable {
 
         if (msg.sender != owner()) {
             if (whitelisted[msg.sender] != true) {
-                require(msg.value >= cost * _mintAmount);
+                if (presaleWallets[msg.sender] != true) {
+                    //general public
+                    require(msg.value >= cost * _mintAmount);
+                } else {
+                    //presale
+                    require(msg.value >= presaleCost * _mintAmount);
+                }
             }
         }
 
@@ -92,6 +100,10 @@ contract TheStripesNFT is ERC721Enumerable, Ownable {
         cost = _newCost;
     }
 
+    function setPresaleCost(uint256 _newCost) public onlyOwner {
+        presaleCost = _newCost;
+    }
+
     function setmaxMintAmount(uint256 _newmaxMintAmount) public onlyOwner {
         maxMintAmount = _newmaxMintAmount;
     }
@@ -117,6 +129,20 @@ contract TheStripesNFT is ERC721Enumerable, Ownable {
 
     function removeWhitelistUser(address _user) public onlyOwner {
         whitelisted[_user] = false;
+    }
+
+    function addPresaleUser(address _user) public onlyOwner {
+        presaleWallets[_user] = true;
+    }
+
+    function add100PresaleUsers(address[100] memory _users) public onlyOwner {
+        for (uint256 i = 0; i < 2; i++) {
+            presaleWallets[_users[i]] = true;
+        }
+    }
+
+    function removePresaleUser(address _user) public onlyOwner {
+        presaleWallets[_user] = false;
     }
 
     function withdraw() public payable onlyOwner {
